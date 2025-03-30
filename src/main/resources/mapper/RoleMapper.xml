@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bank.duty.mapper.RoleMapper">
+
+    <resultMap type="com.bank.duty.entity.Role" id="RoleResult">
+        <id     property="id"       column="id"/>
+        <result property="eoaName"  column="eoa_name"/>
+        <result property="role"     column="role"/>
+        <result property="creator"  column="creator"/>
+        <result property="modifier" column="modifier"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="selectRoleVo">
+        select id, eoa_name, role, creator, modifier, create_time, update_time
+        from hnzrlz_role
+    </sql>
+
+    <!-- 查询角色列表 -->
+    <select id="selectRoleList" parameterType="com.bank.duty.entity.Role" resultMap="RoleResult">
+        <include refid="selectRoleVo"/>
+        <where>
+            <if test="eoaName != null and eoaName != ''">
+                AND eoa_name like concat('%', #{eoaName}, '%')
+            </if>
+            <if test="role != null and role != ''">
+                AND role = #{role}
+            </if>
+        </where>
+    </select>
+
+    <!-- 根据ID查询角色 -->
+    <select id="selectRoleById" parameterType="Long" resultMap="RoleResult">
+        <include refid="selectRoleVo"/>
+        where id = #{id}
+    </select>
+
+    <!-- 查询用户拥有的角色 -->
+    <select id="selectRolesByUserId" parameterType="Long" resultMap="RoleResult">
+        select r.id, r.eoa_name, r.role, r.creator, r.modifier, r.create_time, r.update_time
+        from hnzrlz_role r
+                 left join hnzrlz_user_role ur on ur.role_id = r.id
+        where ur.user_id = #{userId}
+    </select>
+
+    <!-- 新增角色 -->
+    <insert id="insertRole" parameterType="com.bank.duty.entity.Role" useGeneratedKeys="true" keyProperty="id">
+        insert into hnzrlz_role (
+            eoa_name, role, creator, modifier
+        ) values (
+                     #{eoaName}, #{role}, #{creator}, #{modifier}
+                 )
+    </insert>
+
+    <!-- 修改角色 -->
+    <update id="updateRole" parameterType="com.bank.duty.entity.Role">
+        update hnzrlz_role
+        <set>
+            <if test="eoaName != null and eoaName != ''">eoa_name = #{eoaName},</if>
+            <if test="role != null">role = #{role},</if>
+            <if test="modifier != null">modifier = #{modifier},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!-- 删除角色 -->
+    <delete id="deleteRoleById" parameterType="Long">
+        delete from hnzrlz_role where id = #{id}
+    </delete>
+
+    <!-- 批量删除角色 -->
+    <delete id="deleteRoleByIds" parameterType="Long">
+        delete from hnzrlz_role where id in
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

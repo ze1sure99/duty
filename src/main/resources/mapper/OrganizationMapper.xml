@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bank.duty.mapper.OrganizationMapper">
+
+    <resultMap type="com.bank.duty.entity.Organization" id="OrganizationResult">
+        <id     property="id"       column="id"        />
+        <result property="orgId"    column="org_id"    />
+        <result property="pOrgId"   column="p_org_id"  />
+        <result property="orgShort" column="org_short" />
+        <result property="orgName"  column="org_name"  />
+        <result property="orgType"  column="org_type"  />
+        <result property="orgLevel" column="org_level" />
+        <result property="orderNum" column="order_num" />
+        <result property="creator"  column="creator"   />
+        <result property="modifier" column="modifier"  />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="selectOrganizationVo">
+        select id, org_id, p_org_id, org_short, org_name, org_type, org_level, order_num, creator, modifier, create_time, update_time
+        from hnzrlz_org
+    </sql>
+
+    <select id="selectOrganizationById" parameterType="Long" resultMap="OrganizationResult">
+        <include refid="selectOrganizationVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectOrganizationByOrgId" parameterType="String" resultMap="OrganizationResult">
+        <include refid="selectOrganizationVo"/>
+        where org_id = #{orgId}
+    </select>
+
+    <select id="selectChildrenOrganizationByPOrgId" parameterType="String" resultMap="OrganizationResult">
+        <include refid="selectOrganizationVo"/>
+        where p_org_id = #{pOrgId}
+        order by order_num
+    </select>
+
+    <select id="selectOrganizationList" parameterType="com.bank.duty.entity.Organization" resultMap="OrganizationResult">
+        <include refid="selectOrganizationVo"/>
+        <where>
+            <if test="orgId != null and orgId != ''">
+                AND org_id = #{orgId}
+            </if>
+            <if test="pOrgId != null and pOrgId != ''">
+                AND p_org_id = #{pOrgId}
+            </if>
+            <if test="orgShort != null and orgShort != ''">
+                AND org_short like concat('%', #{orgShort}, '%')
+            </if>
+            <if test="orgName != null and orgName != ''">
+                AND org_name like concat('%', #{orgName}, '%')
+            </if>
+            <if test="orgType != null and orgType != ''">
+                AND org_type = #{orgType}
+            </if>
+            <if test="orgLevel != null and orgLevel != ''">
+                AND org_level = #{orgLevel}
+            </if>
+        </where>
+        order by order_num
+    </select>
+
+    <select id="checkOrgIdUnique" parameterType="String" resultType="int">
+        select count(1) from hnzrlz_org where org_id = #{orgId}
+    </select>
+
+    <select id="checkOrgNameUnique" parameterType="String" resultType="int">
+        select count(1) from hnzrlz_org where org_name = #{orgName}
+    </select>
+
+    <insert id="insertOrganization" parameterType="com.bank.duty.entity.Organization" useGeneratedKeys="true" keyProperty="id">
+        insert into hnzrlz_org (
+        <if test="orgId != null and orgId != ''">org_id,</if>
+        <if test="pOrgId != null and pOrgId != ''">p_org_id,</if>
+        <if test="orgShort != null and orgShort != ''">org_short,</if>
+        <if test="orgName != null and orgName != ''">org_name,</if>
+        <if test="orgType != null">org_type,</if>
+        <if test="orgLevel != null and orgLevel != ''">org_level,</if>
+        <if test="orderNum != null">order_num,</if>
+        <if test="creator != null">creator,</if>
+        <if test="modifier != null">modifier</if>
+        ) values (
+        <if test="orgId != null and orgId != ''">#{orgId},</if>
+        <if test="pOrgId != null and pOrgId != ''">#{pOrgId},</if>
+        <if test="orgShort != null and orgShort != ''">#{orgShort},</if>
+        <if test="orgName != null and orgName != ''">#{orgName},</if>
+        <if test="orgType != null">#{orgType},</if>
+        <if test="orgLevel != null and orgLevel != ''">#{orgLevel},</if>
+        <if test="orderNum != null">#{orderNum},</if>
+        <if test="creator != null">#{creator},</if>
+        <if test="modifier != null">#{modifier}</if>
+        )
+    </insert>
+
+    <update id="updateOrganization" parameterType="com.bank.duty.entity.Organization">
+        update hnzrlz_org
+        <set>
+            <if test="orgId != null and orgId != ''">org_id = #{orgId},</if>
+            <if test="pOrgId != null and pOrgId != ''">p_org_id = #{pOrgId},</if>
+            <if test="orgShort != null and orgShort != ''">org_short = #{orgShort},</if>
+            <if test="orgName != null and orgName != ''">org_name = #{orgName},</if>
+            <if test="orgType != null">org_type = #{orgType},</if>
+            <if test="orgLevel != null and orgLevel != ''">org_level = #{orgLevel},</if>
+            <if test="orderNum != null">order_num = #{orderNum},</if>
+            <if test="modifier != null">modifier = #{modifier}</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteOrganizationById" parameterType="Long">
+        delete from hnzrlz_org where id = #{id}
+    </delete>
+
+    <delete id="deleteOrganizationByIds" parameterType="Long">
+        delete from hnzrlz_org where id in
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

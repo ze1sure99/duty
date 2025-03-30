@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bank.duty.mapper.UserMapper">
+
+    <resultMap type="com.bank.duty.entity.User" id="UserResult">
+        <id     property="id"       column="id"/>
+        <result property="name"     column="name"/>
+        <result property="eoaName"  column="eoa_name"/>
+        <result property="dhr"      column="dhr"/>
+        <result property="officeTel" column="office_tel"/>
+        <result property="orgId"    column="org_id"/>
+        <result property="email"    column="email"/>
+        <result property="isCpc"    column="is_cpc"/>
+        <result property="line"     column="line"/>
+        <result property="creator"  column="creator"/>
+        <result property="modifier" column="modifier"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="spareInfo1" column="spare_info_1"/>
+        <result property="spareInfo2" column="spare_info_2"/>
+        <result property="spareInfo3" column="spare_info_3"/>
+        <result property="spareInfo4" column="spare_info_4"/>
+        <result property="spareInfo5" column="spare_info_5"/>
+        <result property="spareInfo6" column="spare_info_6"/>
+        <result property="spareInfo7" column="spare_info_7"/>
+        <result property="spareInfo8" column="spare_info_8"/>
+        <result property="spareInfo9" column="spare_info_9"/>
+        <result property="spareInfo10" column="spare_info_10"/>
+    </resultMap>
+
+    <sql id="selectUserVo">
+        select id, name, eoa_name, dhr, office_tel, org_id, email, is_cpc, line, creator, modifier,
+               create_time, update_time, spare_info_1, spare_info_2, spare_info_3, spare_info_4, spare_info_5,
+               spare_info_6, spare_info_7, spare_info_8, spare_info_9, spare_info_10
+        from hnzrlz_user
+    </sql>
+
+    <!-- 查询用户列表 -->
+    <select id="selectUserList" parameterType="com.bank.duty.entity.User" resultMap="UserResult">
+        <include refid="selectUserVo"/>
+        <where>
+            <if test="name != null and name != ''">
+                AND name like concat('%', #{name}, '%')
+            </if>
+            <if test="eoaName != null and eoaName != ''">
+                AND eoa_name like concat('%', #{eoaName}, '%')
+            </if>
+            <if test="dhr != null and dhr != ''">
+                AND dhr = #{dhr}
+            </if>
+            <if test="orgId != null and orgId != ''">
+                AND org_id = #{orgId}
+            </if>
+            <if test="line != null and line != ''">
+                AND line = #{line}
+            </if>
+            <if test="isCpc != null">
+                AND is_cpc = #{isCpc}
+            </if>
+        </where>
+    </select>
+
+    <!-- 根据ID查询用户 -->
+    <select id="selectUserById" parameterType="Long" resultMap="UserResult">
+        <include refid="selectUserVo"/>
+        where id = #{id}
+    </select>
+
+    <!-- 根据EOA用户名查询用户 -->
+    <select id="selectUserByEoaName" parameterType="String" resultMap="UserResult">
+        <include refid="selectUserVo"/>
+        where eoa_name = #{eoaName}
+    </select>
+
+    <!-- 根据机构ID查询用户列表 -->
+    <select id="selectUserByOrgId" parameterType="String" resultMap="UserResult">
+        <include refid="selectUserVo"/>
+        where org_id = #{orgId}
+    </select>
+
+    <!-- 根据条线查询用户列表 -->
+    <select id="selectUserByLine" parameterType="String" resultMap="UserResult">
+        <include refid="selectUserVo"/>
+        where line = #{line}
+    </select>
+
+    <!-- 新增用户 -->
+    <insert id="insertUser" parameterType="com.bank.duty.entity.User" useGeneratedKeys="true" keyProperty="id">
+        insert into hnzrlz_user (
+            name, eoa_name, dhr, office_tel, org_id, email, is_cpc, line, creator, modifier,
+            spare_info_1, spare_info_2, spare_info_3, spare_info_4, spare_info_5,
+            spare_info_6, spare_info_7, spare_info_8, spare_info_9, spare_info_10
+        ) values (
+                     #{name}, #{eoaName}, #{dhr}, #{officeTel}, #{orgId}, #{email}, #{isCpc}, #{line}, #{creator}, #{modifier},
+                     #{spareInfo1}, #{spareInfo2}, #{spareInfo3}, #{spareInfo4}, #{spareInfo5},
+                     #{spareInfo6}, #{spareInfo7}, #{spareInfo8}, #{spareInfo9}, #{spareInfo10}
+                 )
+    </insert>
+
+    <!-- 修改用户 -->
+    <update id="updateUser" parameterType="com.bank.duty.entity.User">
+        update hnzrlz_user
+        <set>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="eoaName != null and eoaName != ''">eoa_name = #{eoaName},</if>
+            <if test="dhr != null and dhr != ''">dhr = #{dhr},</if>
+            <if test="officeTel != null">office_tel = #{officeTel},</if>
+            <if test="orgId != null and orgId != ''">org_id = #{orgId},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="isCpc != null">is_cpc = #{isCpc},</if>
+            <if test="line != null and line != ''">line = #{line},</if>
+            <if test="modifier != null">modifier = #{modifier},</if>
+            <if test="spareInfo1 != null">spare_info_1 = #{spareInfo1},</if>
+            <if test="spareInfo2 != null">spare_info_2 = #{spareInfo2},</if>
+            <if test="spareInfo3 != null">spare_info_3 = #{spareInfo3},</if>
+            <if test="spareInfo4 != null">spare_info_4 = #{spareInfo4},</if>
+            <if test="spareInfo5 != null">spare_info_5 = #{spareInfo5},</if>
+            <if test="spareInfo6 != null">spare_info_6 = #{spareInfo6},</if>
+            <if test="spareInfo7 != null">spare_info_7 = #{spareInfo7},</if>
+            <if test="spareInfo8 != null">spare_info_8 = #{spareInfo8},</if>
+            <if test="spareInfo9 != null">spare_info_9 = #{spareInfo9},</if>
+            <if test="spareInfo10 != null">spare_info_10 = #{spareInfo10},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!-- 删除用户 -->
+    <delete id="deleteUserById" parameterType="Long">
+        delete from hnzrlz_user where id = #{id}
+    </delete>
+
+    <!-- 批量删除用户 -->
+    <delete id="deleteUserByIds" parameterType="Long">
+        delete from hnzrlz_user where id in
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>
