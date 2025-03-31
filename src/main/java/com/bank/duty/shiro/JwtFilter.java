@@ -7,6 +7,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.bank.duty.service.impl.TokenBlacklistService;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter;
 import org.slf4j.Logger;
@@ -30,6 +31,23 @@ public class JwtFilter extends BasicHttpAuthenticationFilter {
      */
     private static final String TOKEN_HEADER = "Authorization";
 
+    private TokenBlacklistService blacklistService;
+
+    /**
+     * 在过滤器配置设置后初始化
+     */
+    @Override
+    protected void onFilterConfigSet() throws Exception {
+        super.onFilterConfigSet();
+        try {
+            // 使用SpringUtils从Spring容器获取TokenBlacklistService实例
+            this.blacklistService = SpringUtils.getBean(TokenBlacklistService.class);
+            logger.debug("成功初始化TokenBlacklistService");
+        } catch (Exception e) {
+            logger.error("初始化TokenBlacklistService失败", e);
+        }
+    }
+
     /**
      * 判断是否允许访问
      */
@@ -44,6 +62,22 @@ public class JwtFilter extends BasicHttpAuthenticationFilter {
         // 尝试登录
         if (isLoginAttempt(request, response)) {
             try {
+                // 获取JWT令牌
+                String token = getAuthzHeader(request);
+                if (token != null) {
+                    // 移除Bearer前缀
+                    if (token.startsWith("Bearer ")) {
+                        token = token.substring(7);
+                    }
+
+                    // 检查令牌是否在黑名单中（确保service已初始化）
+                    if (blacklistService != null && blacklistService.isBlacklisted(token)) {
+                        logger.debug("Token已被加入黑名单，拒绝访问");
+                        return false;
+                    }
+                }
+
+                // 继续正常的登录验证流程
                 return executeLogin(request, response);
             } catch (Exception e) {
                 // 认证失败，不做处理，将进入onAccessDenied处理
@@ -54,6 +88,7 @@ public class JwtFilter extends BasicHttpAuthenticationFilter {
         return false;
     }
 
+    // 其余方法保持不变...
     /**
      * 判断是否是登录请求
      */

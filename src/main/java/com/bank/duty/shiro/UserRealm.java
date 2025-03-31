@@ -101,24 +101,39 @@ public class UserRealm extends AuthorizingRealm {
     @Override
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
         String token = (String) authenticationToken.getCredentials();
+        logger.info("收到认证请求，令牌：{}", token);
 
-        // 验证token是否有效
-        if (!jwtUtils.validateToken(token)) {
-            throw new ExpiredCredentialsException("令牌已过期");
+        try {
+            // 验证token是否有效
+            boolean isValid = jwtUtils.validateToken(token);
+            logger.info("令牌验证结果：{}", isValid);
+
+            if (!isValid) {
+                logger.warn("令牌已过期或无效");
+                throw new ExpiredCredentialsException("令牌已过期");
+            }
+
+            // 从token中获取用户名
+            String username = jwtUtils.getUsernameFromToken(token);
+            logger.info("从令牌中获取的用户名：{}", username);
+
+            if (username == null) {
+                logger.warn("无法从令牌中获取用户名");
+                throw new UnknownAccountException("令牌验证失败");
+            }
+
+            // 查询用户是否存在
+            User user = userService.selectUserByEoaName(username);
+            if (user == null) {
+                logger.warn("用户不存在：{}", username);
+                throw new UnknownAccountException("用户不存在");
+            }
+            logger.info("用户认证成功：{}", username);
+
+            return new SimpleAuthenticationInfo(token, token, getName());
+        } catch (Exception e) {
+            logger.error("认证过程发生异常", e);
+            throw e;
         }
-
-        // 从token中获取用户名
-        String username = jwtUtils.getUsernameFromToken(token);
-        if (username == null) {
-            throw new UnknownAccountException("令牌验证失败");
-        }
-
-        // 查询用户是否存在
-        User user = userService.selectUserByEoaName(username);
-        if (user == null) {
-            throw new UnknownAccountException("用户不存在");
-        }
-
-        return new SimpleAuthenticationInfo(token, token, getName());
     }
 }

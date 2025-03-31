@@ -37,6 +37,8 @@ public class JwtUtils {
     @Value("${jwt.tokenPrefix}")
     private String tokenPrefix;
 
+
+
     /**
      * 生成JWT token
      *
@@ -133,10 +135,17 @@ public class JwtUtils {
      * @return JWT token
      */
     public String getTokenFromHeader(String authHeader) {
-        if (authHeader != null && authHeader.startsWith(tokenPrefix)) {
-            return authHeader.substring(tokenPrefix.length());
+        if (authHeader == null) {
+            return null;
         }
-        return null;
+
+        // 接受两种格式：带前缀或不带前缀
+        if (authHeader.startsWith(tokenPrefix)) {
+            return authHeader.substring(tokenPrefix.length());
+        } else {
+            // 直接返回token
+            return authHeader;
+        }
     }
 
     // 内部辅助方法
@@ -151,7 +160,7 @@ public class JwtUtils {
     /**
      * 从token中获取JWT中的负载
      */
-    private Claims getClaimsFromToken(String token) {
+    public Claims getClaimsFromToken(String token) {
         Claims claims = null;
         try {
             claims = Jwts.parser()
