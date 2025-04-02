@@ -18,6 +18,12 @@ public interface RoleService {
     List<Role> selectRolesByUserId(Long userId);
 
     /**
+     * 根据用户ID查询角色值列表
+     * 这个方法返回的是角色的role字段值列表，如["1", "2"]
+     */
+    List<String> selectRoleValuesByUserId(Long userId);
+
+    /**
      * 查询所有角色
      */
     List<Role> selectRoleAll();

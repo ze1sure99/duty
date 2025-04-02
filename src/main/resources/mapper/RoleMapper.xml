@@ -46,6 +46,14 @@
         where ur.user_id = #{userId}
     </select>
 
+    <!-- 根据用户ID查询角色值列表 -->
+    <select id="selectRoleValuesByUserId" parameterType="Long" resultType="String">
+        select r.role
+        from hnzrlz_role r
+                 inner join hnzrlz_user_role ur on ur.role_id = r.id
+        where ur.user_id = #{userId}
+    </select>
+
     <!-- 新增角色 -->
     <insert id="insertRole" parameterType="com.bank.duty.entity.Role" useGeneratedKeys="true" keyProperty="id">
         insert into hnzrlz_role (
@@ -78,5 +86,4 @@
             #{id}
         </foreach>
     </delete>
-
 </mapper>

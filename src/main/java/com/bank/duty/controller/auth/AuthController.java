@@ -4,6 +4,7 @@ import com.bank.duty.common.utils.JwtUtils;
 import com.bank.duty.entity.User;
 import com.bank.duty.framework.web.domain.AjaxResult;
 import com.bank.duty.service.UserService;
+import com.bank.duty.service.RoleService;
 import com.bank.duty.service.impl.TokenBlacklistService;
 import io.jsonwebtoken.Claims;
 import io.swagger.annotations.Api;
@@ -16,6 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 认证控制器
@@ -27,6 +31,9 @@ public class AuthController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private RoleService roleService; // 添加角色服务
 
     @Autowired
     private TokenBlacklistService blacklistService;
@@ -48,11 +55,23 @@ public class AuthController {
             return AjaxResult.error("用户不存在");
         }
 
+        // 获取用户角色值列表
+        List<String> roles = roleService.selectRoleValuesByUserId(user.getId());
+
         // 直接生成JWT，跳过密码验证
         String token = jwtUtils.generateToken(username);
 
+        // 创建包含角色的用户数据
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("id", user.getId());
+        userData.put("name", user.getName());
+        userData.put("eoaName", user.getEoaName());
+        userData.put("dhr", user.getDhr());
+        userData.put("orgId", user.getOrgId());
+        userData.put("roles", roles); // 添加角色值列表
+
         // 返回登录成功信息
-        return AjaxResult.success("登录成功").put("token", token).put("user", user);
+        return AjaxResult.success("登录成功").put("token", token).put("user", userData);
     }
 
     /**
@@ -93,6 +112,22 @@ public class AuthController {
             return AjaxResult.error("用户不存在");
         }
 
-        return AjaxResult.success(user);
+        // 获取用户角色值列表
+        List<String> roles = roleService.selectRoleValuesByUserId(user.getId());
+
+        // 创建包含角色的用户数据
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("id", user.getId());
+        userData.put("name", user.getName());
+        userData.put("eoaName", user.getEoaName());
+        userData.put("dhr", user.getDhr());
+        userData.put("orgId", user.getOrgId());
+        userData.put("email", user.getEmail());
+        userData.put("officeTel", user.getOfficeTel());
+        userData.put("isCpc", user.getIsCpc());
+        userData.put("line", user.getLine());
+        userData.put("roles", roles); // 添加角色值列表
+
+        return AjaxResult.success(userData);
     }
 }
