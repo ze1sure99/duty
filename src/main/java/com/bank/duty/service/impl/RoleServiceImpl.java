@@ -130,4 +130,6 @@ public class RoleServiceImpl implements RoleService {
     public int deleteUserRoleInfos(Long roleId, Long[] userIds) {
         return userRoleMapper.deleteUserRoleInfos(roleId, userIds);
     }
+
+
 }

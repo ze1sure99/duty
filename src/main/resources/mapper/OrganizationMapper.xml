@@ -61,8 +61,30 @@
             <if test="orgLevel != null and orgLevel != ''">
                 AND org_level = #{orgLevel}
             </if>
+            <if test="dataScope != null and dataScope != ''">
+                AND ${dataScope}
+            </if>
         </where>
         order by order_num
+    </select>
+
+    <!-- 根据机构ID获取机构层级 -->
+    <select id="getOrgLevelByOrgId" parameterType="String" resultType="String">
+        select org_level from hnzrlz_org where org_id = #{orgId}
+    </select>
+
+    <!-- 根据角色ID查询机构 -->
+    <select id="selectOrgListByRoleId" parameterType="Long" resultType="String">
+        select d.org_id
+        from hnzrlz_org d
+                 left join hnzrlz_role_org rd on d.org_id = rd.org_id
+        where rd.role_id = #{roleId}
+        order by d.p_org_id, d.order_num
+    </select>
+
+    <!-- 查询机构是否存在用户 -->
+    <select id="checkOrgExistUser" parameterType="String" resultType="int">
+        select count(1) from hnzrlz_user where org_id = #{orgId}
     </select>
 
     <select id="checkOrgIdUnique" parameterType="String" resultType="int">

@@ -2,11 +2,19 @@ package com.bank.duty.service;
 
 import java.util.List;
 import com.bank.duty.entity.Organization;
+import com.bank.duty.framework.web.domain.TreeSelect;
 
 /**
  * 机构管理 服务接口
  */
 public interface OrganizationService {
+    /**
+     * 查询机构管理数据
+     *
+     * @param organization 机构信息
+     * @return 机构信息集合
+     */
+    public List<Organization> selectOrganizationList(Organization organization);
 
     /**
      * 查询机构信息
@@ -14,15 +22,7 @@ public interface OrganizationService {
      * @param id 机构ID
      * @return 机构信息
      */
-    Organization selectOrganizationById(Long id);
-
-    /**
-     * 查询机构列表
-     *
-     * @param organization 机构信息
-     * @return 机构集合
-     */
-    List<Organization> selectOrganizationList(Organization organization);
+    public Organization selectOrganizationById(Long id);
 
     /**
      * 根据机构编码查询机构
@@ -30,7 +30,7 @@ public interface OrganizationService {
      * @param orgId 机构编码
      * @return 机构信息
      */
-    Organization selectOrganizationByOrgId(String orgId);
+    public Organization selectOrganizationByOrgId(String orgId);
 
     /**
      * 查询子机构列表
@@ -38,39 +38,79 @@ public interface OrganizationService {
      * @param pOrgId 父机构ID
      * @return 子机构集合
      */
-    List<Organization> selectChildrenOrganizationByPOrgId(String pOrgId);
+    public List<Organization> selectChildrenOrganizationByPOrgId(String pOrgId);
 
     /**
-     * 新增机构
+     * 构建前端所需要机构树结构
+     *
+     * @param orgs 机构列表
+     * @return 树结构列表
+     */
+    public List<Organization> buildOrgTree(List<Organization> orgs);
+
+    /**
+     * 构建前端所需要下拉树结构
+     *
+     * @param orgs 机构列表
+     * @return 下拉树结构列表
+     */
+    public List<TreeSelect> buildOrgTreeSelect(List<Organization> orgs);
+
+    /**
+     * 根据角色ID查询机构树信息
+     *
+     * @param roleId 角色ID
+     * @return 选中机构列表
+     */
+    public List<String> selectOrgListByRoleId(Long roleId);
+
+    /**
+     * 根据用户ID查询机构树信息
+     *
+     * @param userId 用户ID
+     * @return 机构树列表
+     */
+    public List<Organization> selectOrgTreeByUserId(Long userId);
+
+    /**
+     * 根据用户ID查询机构下拉树结构
+     *
+     * @param userId 用户ID
+     * @return 下拉树结构列表
+     */
+    public List<TreeSelect> selectOrgTreeSelectByUserId(Long userId);
+
+    /**
+     * 新增机构信息
      *
      * @param organization 机构信息
      * @return 结果
      */
-    int insertOrganization(Organization organization);
+    public int insertOrganization(Organization organization);
 
     /**
-     * 修改机构
+     * 修改机构信息
      *
      * @param organization 机构信息
      * @return 结果
      */
-    int updateOrganization(Organization organization);
+    public int updateOrganization(Organization organization);
 
     /**
-     * 删除机构信息
+     * 删除机构管理信息
      *
      * @param id 机构ID
      * @return 结果
      */
-    int deleteOrganizationById(Long id);
+    public int deleteOrganizationById(Long id);
 
     /**
-     * 批量删除机构信息
+     * 批量删除机构管理信息
      *
-     * @param ids 需要删除的机构ID
+     * @param ids 需要删除的数据ID
      * @return 结果
      */
-    int deleteOrganizationByIds(Long[] ids);
+    public int deleteOrganizationByIds(Long[] ids);
 
     /**
      * 校验机构编码是否唯一
@@ -78,7 +118,7 @@ public interface OrganizationService {
      * @param orgId 机构编码
      * @return 结果
      */
-    boolean checkOrgIdUnique(String orgId);
+    public boolean checkOrgIdUnique(String orgId);
 
     /**
      * 校验机构名称是否唯一
@@ -86,13 +126,13 @@ public interface OrganizationService {
      * @param orgName 机构名称
      * @return 结果
      */
-    boolean checkOrgNameUnique(String orgName);
+    public boolean checkOrgNameUnique(String orgName);
 
     /**
-     * 根据机构编码获取机构级别
+     * 根据机构ID获取机构层级
      *
-     * @param orgId 机构编码
-     * @return 机构级别
+     * @param orgId 机构ID
+     * @return 机构层级
      */
-    String getOrgLevelByOrgId(String orgId);
+    public String getOrgLevelByOrgId(String orgId);
 }

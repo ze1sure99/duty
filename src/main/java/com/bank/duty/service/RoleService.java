@@ -33,6 +33,7 @@ public interface RoleService {
      */
     Role selectRoleById(Long roleId);
 
+
     /**
      * 校验角色名称是否唯一
      */

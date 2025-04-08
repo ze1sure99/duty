@@ -1,17 +1,15 @@
 package com.bank.duty.entity;
 
-import java.util.Date;
-import java.io.Serializable;
-
+import java.util.ArrayList;
+import java.util.List;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 /**
  * 机构实体类
  */
 @Data
-public class Organization implements Serializable {
-    private static final long serialVersionUID = 1L;
-
+public class Organization {
     /** 主键id */
     private Long id;
 
@@ -43,8 +41,15 @@ public class Organization implements Serializable {
     private Long modifier;
 
     /** 创建时间 */
-    private Date createTime;
+    private String createTime;
 
     /** 修改时间 */
-    private Date updateTime;
+    private String updateTime;
+
+    /** 子部门 */
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<Organization> children = new ArrayList<>();
+
+    /** 数据权限 */
+    private String dataScope;
 }

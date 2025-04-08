@@ -89,4 +89,28 @@ public interface OrganizationMapper {
      * @return 结果
      */
     int checkOrgNameUnique(String orgName);
+
+    /**
+     * 根据机构ID获取机构层级
+     *
+     * @param orgId 机构ID
+     * @return 机构层级
+     */
+    String getOrgLevelByOrgId(String orgId);
+
+    /**
+     * 根据角色ID查询机构树信息
+     *
+     * @param roleId 角色ID
+     * @return 包含所有机构的列表
+     */
+    List<String> selectOrgListByRoleId(Long roleId);
+
+    /**
+     * 查询机构是否存在用户
+     *
+     * @param orgId 机构ID
+     * @return 结果
+     */
+    int checkOrgExistUser(String orgId);
 }
