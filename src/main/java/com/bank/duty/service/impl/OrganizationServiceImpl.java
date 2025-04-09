@@ -1,10 +1,9 @@
 package com.bank.duty.service.impl;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -89,21 +88,81 @@ public class OrganizationServiceImpl implements OrganizationService {
      */
     @Override
     public List<Organization> buildOrgTree(List<Organization> orgs) {
-        List<Organization> returnList = new ArrayList<>();
-        List<String> tempList = orgs.stream().map(Organization::getOrgId).collect(Collectors.toList());
+        if (orgs == null || orgs.isEmpty()) {
+            return new ArrayList<>();
+        }
 
+        // 构建orgId到Organization对象的映射
+        Map<String, Organization> orgMap = new HashMap<>();
         for (Organization org : orgs) {
-            // 如果是顶级节点，遍历该父节点的所有子节点
-            if (!tempList.contains(org.getPOrgId()) || "0".equals(org.getPOrgId()) || StringUtil.isEmpty(org.getPOrgId())) {
-                recursionFn(orgs, org);
+            // 创建新对象，避免引用相同对象
+            Organization newOrg = new Organization();
+            // 复制属性
+            BeanUtils.copyProperties(org, newOrg);
+            // 重置children，避免已有数据干扰
+            newOrg.setChildren(new ArrayList<>());
+            orgMap.put(newOrg.getOrgId(), newOrg);
+        }
+
+        // 构建返回的树形结构
+        List<Organization> returnList = new ArrayList<>();
+
+        // 构建父子关系
+        for (Organization org : orgMap.values()) {
+            String pOrgId = org.getPOrgId();
+            // 如果是顶级节点或父节点不在当前数据集中
+            if (pOrgId == null || pOrgId.isEmpty() || "0".equals(pOrgId) || !orgMap.containsKey(pOrgId)) {
                 returnList.add(org);
+            } else {
+                // 添加到父节点的children列表
+                Organization parentOrg = orgMap.get(pOrgId);
+                parentOrg.getChildren().add(org);
             }
         }
 
-        if (returnList.isEmpty()) {
-            returnList = orgs;
+        // 如果返回列表为空但有机构数据，返回所有机构(平铺结构)
+        if (returnList.isEmpty() && !orgMap.isEmpty()) {
+            List<Organization> flatList = new ArrayList<>(orgMap.values());
+            // 对平铺结构排序
+            sortOrganizationsByOrderNum(flatList);
+            return flatList;
         }
+
+        // 对顶级节点排序
+        sortOrganizationsByOrderNum(returnList);
+
+        // 对所有节点的子节点进行排序
+        sortChildrenRecursively(returnList);
+
         return returnList;
+    }
+
+    /**
+     * 按 orderNum 排序机构列表
+     */
+    private void sortOrganizationsByOrderNum(List<Organization> orgs) {
+        if (orgs != null && orgs.size() > 1) {
+            orgs.sort(Comparator.comparing(Organization::getOrderNum, Comparator.nullsLast(Comparator.naturalOrder())));
+        }
+    }
+
+    /**
+     * 递归排序所有子节点
+     */
+    private void sortChildrenRecursively(List<Organization> orgs) {
+        if (orgs == null || orgs.isEmpty()) {
+            return;
+        }
+
+        for (Organization org : orgs) {
+            List<Organization> children = org.getChildren();
+            if (children != null && !children.isEmpty()) {
+                // 排序当前层级的子节点
+                sortOrganizationsByOrderNum(children);
+                // 递归排序下一层级
+                sortChildrenRecursively(children);
+            }
+        }
     }
 
     /**
@@ -148,36 +207,49 @@ public class OrganizationServiceImpl implements OrganizationService {
         // 获取用户角色值
         List<String> roleValues = roleService.selectRoleValuesByUserId(userId);
 
-        // 初始化查询参数
-        Organization orgParam = new Organization();
-
         // 判断是否为超级管理员
         boolean isSuperAdmin = roleValues.contains("1");
 
-        if (!isSuperAdmin) {
-            // 非超级管理员，设置数据权限
-            StringBuilder dataScope = new StringBuilder();
+        List<Organization> orgs;
 
-            // 机构权限过滤：只能看到自己所属机构和下级机构
+        if (isSuperAdmin) {
+            // 超级管理员查看所有机构
+            orgs = organizationMapper.selectOrganizationList(new Organization());
+        } else {
+            // 系统管理员和操作员查看自己机构及下级
             String orgId = user.getOrgId();
-            dataScope.append(String.format(
-                    "(org_id = '%s' OR org_id IN (SELECT org_id FROM hnzrlz_org WHERE p_org_id = '%s'))",
-                    orgId, orgId));
 
-            // 条线权限过滤：只能看到本条线数据
-            String line = user.getLine();
-            if (StringUtil.isNotEmpty(line)) {
-                dataScope.append(String.format(" AND line = '%s'", line));
+            // 先获取自己所属机构
+            Organization selfOrg = organizationMapper.selectOrganizationByOrgId(orgId);
+
+            // 获取所有机构列表，后面通过树形构建筛选
+            List<Organization> allOrgs = new ArrayList<>();
+            if (selfOrg != null) {
+                allOrgs.add(selfOrg);
+                // 递归获取所有层级的子机构
+                getAllChildOrgsRecursively(orgId, allOrgs);
             }
 
-            orgParam.setDataScope(dataScope.toString());
+            orgs = allOrgs;
         }
-
-        // 获取机构列表
-        List<Organization> orgs = organizationMapper.selectOrganizationList(orgParam);
 
         // 构建树结构
         return buildOrgTree(orgs);
+    }
+
+    /**
+     * 递归获取所有层级的子机构
+     */
+    private void getAllChildOrgsRecursively(String parentOrgId, List<Organization> orgList) {
+        // 直接获取下一级子机构（已按orderNum排序）
+        List<Organization> children = organizationMapper.selectChildrenOrganizationByPOrgId(parentOrgId);
+        if (children != null && !children.isEmpty()) {
+            orgList.addAll(children);
+            // 递归获取每个子机构的下级机构
+            for (Organization child : children) {
+                getAllChildOrgsRecursively(child.getOrgId(), orgList);
+            }
+        }
     }
 
     /**
